@@ -52,6 +52,14 @@ if(isset($_POST['add_one_emp']) && $_POST['employee'] != '') {
 
  
    $officecode = $_POST['officecode'];
+
+        $query1 = mysqli_query($db, "SELECT * FROM department WHERE officename ='$officecode'");
+       if($row = mysqli_fetch_array($query1)) {
+        $id = $row['officecode'];
+       }
+ $officecode = $id;
+
+
    $payroll_id = $_POST['p_id_add'];
    $from = $_POST['from'];
    $to = $_POST['to'];
@@ -129,11 +137,33 @@ if(isset($_POST['add_one_emp']) && $_POST['employee'] != '') {
                     $days = 13;
                 }
 
+                    $query = mysqli_query($db, "SELECT name_id,payroll_id,date_from,date_to FROM payroll_jo_tbl 
+                                      WHERE name_id='$emp_id[0]' AND date_from='$from' AND date_to='$to'
+                                       ");
 
+                     if($rowqueryChecking=mysqli_fetch_array($query)) {
+                        $dup_name_id = $rowqueryChecking['name_id'];
+                        $p_id_dup = $rowqueryChecking['payroll_id'];
+                        // $name = $rowqueryChecking['surname']." ".$rowqueryChecking['firstname'];
+
+
+                     }
+
+
+
+                $numrow=mysqli_num_rows($query);
+
+
+  if($numrow == 0) {
 
                 $query = mysqli_query($db, "INSERT INTO payroll_jo_tbl(payroll_id,charge,mode_of_payment,name_id,type,position_code,salary_rate,officecode,days,date_from,date_to,date_created,net_pay) 
                                             VALUES('$payroll_id','$charge','$payment','$emp_id[0]','$type','$positioncode',
                                             '$salary','$officecode','$days','$from','$to','$date_created','$net_half_db')");
+
+              }
+              else {
+
+              }
             }
            
         
@@ -249,7 +279,18 @@ if(isset($_POST['update_deduction']) == 'update_deduction') {
 
    echo '<script>document.location="view-payroll-jo?payroll_id='.$payroll_id.'"</script>';
 
-}else {
+}else if(isset($_POST['update_charge'])) {
+
+   $charge = $_POST['edit_charge'];
+    $payroll_id = $_POST['payroll_id'];
+   
+
+    $query = mysqli_query($db, "UPDATE payroll_jo_tbl SET charge='$charge'
+                                WHERE payroll_id='$payroll_id' ");
+
+   echo '<script>document.location="view-payroll-jo?payroll_id='.$payroll_id.'"</script>';
+}
+else {
 
 }
 
@@ -318,7 +359,7 @@ if(isset($_POST['update_deduction']) == 'update_deduction') {
                     Period: <code><?php 
 
                     $p_id = $_GET['payroll_id'];
-                    $query = mysqli_query($db, "SELECT DISTINCT date_from,date_to,date_created FROM payroll_jo_tbl WHERE payroll_id = '$p_id' ");
+                    $query = mysqli_query($db, "SELECT DISTINCT charge,date_from,date_to,date_created FROM payroll_jo_tbl WHERE payroll_id = '$p_id' ");
                     if($row = mysqli_fetch_array($query)) {
                         
                      
@@ -326,6 +367,8 @@ if(isset($_POST['update_deduction']) == 'update_deduction') {
   $from = strtr($row['date_from'], '/', '-');
   $to = strtr($row['date_to'], '/', '-');
   $created = strtr($row['date_created'], '/', '-');
+  $charge = $row['charge'];
+
  
 
                       // $to = date("Y",strtotime($row['date_to']));
@@ -352,6 +395,13 @@ if(isset($_POST['update_deduction']) == 'update_deduction') {
                                     type="button" class="mt-1 btn btn-outline-success" data-bs-toggle="modal"
                                     data-bs-target="#modal-edit-date">
                                Edit Date Period
+                            </button>
+                             <button 
+                                    data-charge="<?php echo $charge; ?>"
+                                    data-pid="<?php echo $p_id; ?>"
+                                    type="button" class="mt-1 btn btn-outline-primary" data-bs-toggle="modal"
+                                    data-bs-target="#modal-edit-charge">
+                               Edit Funding Charge
                             </button>
                           </div>
 
@@ -501,6 +551,57 @@ echo '<button data-nameid="'.$row['name_id'].'"
             </footer>
         </div>
     </div>
+
+
+    <!-- ----------------------------------------------------------- -->
+<div class="modal fade" id="modal-edit-charge" tabindex="-1" role="dialog"
+                                aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                <div class="modal-dialog  modal-dialog-centered modal-dialog-centered modal-dialog-scrollable"
+                                    role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalCenterTitle">Update Funding Charge
+                                            </h5>
+                                            <button type="button" class="close" data-bs-dismiss="modal"
+                                                aria-label="Close">
+                                              X
+                                            </button>
+                                        </div>
+                                        <div class="modal-body " style="height: 200px">
+
+            <form action="view-payroll-jo" method="post">
+           <label for="edit_charge">Charge To:</label><br>
+           <input type="text" name="edit_charge" class="form-control" id="edit_charge"><br>
+  
+            <input type="hidden" value="<?php echo $_GET['payroll_id'] ?>" class="form-control" name="payroll_id" 
+            id="payroll_id">
+
+          <br>
+            <div style="text-align: right">
+             <button type="submit" name="update_charge" class="btn btn-primary ml-1">
+                                                <i class="bx bx-check d-block d-sm-none"></i>
+                                                <span class="d-none d-sm-block">Update</span>
+                                            </button>
+                                             <button class="btn btn-secondary" type="button" class="close" data-bs-dismiss="modal"
+                                                aria-label="Close">
+                                                Cancel
+                                            </button>
+                                           </div>                          
+            
+            </div>       
+            </div>
+                  
+                                </div>
+
+                                           
+                            </form>
+                 
+                                        </div>
+                                       
+                                    </div>
+                                </div>
+                            </div>
+<!-- ------------------------------>
 <!-- ----------------------------------------------------------- -->
 <div class="modal fade" id="modal-edit-date" tabindex="-1" role="dialog"
                                 aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -947,7 +1048,25 @@ xhr.onload = function() {
    modal.find('.modal-body #edit_date_to').val(to)
 
 
-})
+});
+
+     $('#modal-edit-charge').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget) // Button that triggered the modal
+  var nameid = button.data('nameid')
+  var charge = button.data('charge') 
+
+ // Extract info from data-* attributes
+    // Extract info from data-* attributes
+   // Extract info from data-* attributes
+  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+   var modal = $(this)
+  // modal.find('.modal-title').text('New message to ' + recipient)
+   modal.find('.modal-body #name_id').val(nameid)
+   modal.find('.modal-body #edit_charge').val(charge)
+ 
+
+});
 
 
 </script>

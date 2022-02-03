@@ -38,6 +38,13 @@
 
  $payroll_id = "JO".date('YmdHms');
  $officecode = $_POST['officecode'];
+
+     $query1 = mysqli_query($db, "SELECT * FROM department WHERE officename ='$officecode'");
+       if($row = mysqli_fetch_array($query1)) {
+        $id = $row['officecode'];
+       }
+ $officecode = $id;
+
  $type = $_POST['type'];
  $charge = $_POST['charge'];
   $payment = $_POST['payment'];
@@ -54,6 +61,11 @@
       $netpay = 0;
       $tax = 0;
    
+     $array_name_id[] = NULL;
+  $dup_name_id = NULL;
+  $p_id_dup = NULL;
+  $name = NULL;
+
     if(count($_POST['employee'])==count(array_count_values($_POST['employee']))){
 
 
@@ -111,15 +123,52 @@
 
 
 
+
+                $query = mysqli_query($db, "SELECT name_id,payroll_id,date_from,date_to FROM payroll_jo_tbl 
+                                      WHERE name_id='$emp_id[0]' AND date_from='$from' AND date_to='$to'
+                                       ");
+
+                     if($rowqueryChecking=mysqli_fetch_array($query)) {
+                        $dup_name_id = $rowqueryChecking['name_id'];
+                        $p_id_dup = $rowqueryChecking['payroll_id'];
+                        // $name = $rowqueryChecking['surname']." ".$rowqueryChecking['firstname'];
+
+
+                     }
+
+
+
+                $numrow=mysqli_num_rows($query);
+
+
+
+                      if($numrow == 0) {
+
                 $query = mysqli_query($db, "INSERT INTO payroll_jo_tbl(payroll_id,charge,mode_of_payment,name_id,type,position_code,salary_rate,officecode,days,date_from,date_to,date_created,net_pay) 
                     VALUES('$payroll_id','$charge','$payment','$emp_id[0]','$type','$positioncode','$salary',
                         '$officecode','$days','$from','$to','$date','$net_half_db')");
             }
+               else{
+                     echo '<script>swal("Duplication Detected!", "'.$dup_name_id.' Already in Payroll: '.$p_id_dup.'", "error");</script>';
+                     }
+            }
            
         
-        }
-        echo '<script>swal("Awesome!", "Payroll Successfully Saved!", "success");</script>'; 
-        echo '<script>document.location = "create-salary-jo.php"</script>';
+        } //end FORLOOP
+
+
+
+         if($dup_name_id != 0) {
+
+              $from = strtr($rowqueryChecking['date_from'], '/', '-');
+              $to = strtr($rowqueryChecking['date_to'], '/', '-');
+            
+              echo '<script>swal("Saving Failed!", "Employeeno: '.$dup_name_id.' was already in Payroll: '.$p_id_dup.' w/ Date Period: '.date("M d-",strtotime($from)).date("d, Y ",strtotime($to)).'", "error");</script>';
+
+           }else {
+             echo '<script>swal("Awesome!", "Payroll Successfully Saved!", "success");</script>'; 
+
+           }
     }
 
 
@@ -171,12 +220,12 @@ else if(isset($_POST['grat'])) {
             
                
                 <input type="date" id="to" style="width: 174px; height: 39px;" name="to"> -->
-                      <input type="radio" id="full" name="type" value="full">
+                      <input type="radio" id="full" name="type" value="full" required="">
                       <label for="full">Full Month</label><br>
                       <input type="radio" id="half" name="type" value="half">
                       <label for="half">Half Month</label><br>  
 
-                         <input type="radio" id="atmdownload" name="payment" value="atm">
+                         <input type="radio" id="atmdownload" name="payment" value="atm" required="">
                       <label for="atmdownload">ATM Downloading</label><br>
                       <input type="radio" id="ca" name="payment" value="ca">
                       <label for="ca">Cash Advance(CA)</label><br>   
@@ -185,13 +234,13 @@ else if(isset($_POST['grat'])) {
             <br>
             <label for="charge">Funding Charges:</label><br>
             
-            <input required="" name="charge" id="charge" style="width: 350px; height: 39px;" ><br><br>
+            <input required="" name="charge" id="charge" style="width: 350px; height: 39px;" required=""><br><br>
              <label for="dept">Date:</label><br>
             
-                <input type="date" id="from" style="width: 174px; height: 39px;" name="from"> 
+                <input type="date" id="from" style="width: 174px; height: 39px;" name="from" required=""> 
                 <?php //echo "CS".date("YmdHis"); ?>
                
-                <input type="date" id="to" style="width: 174px; height: 39px;" name="to">
+                <input type="date" id="to" style="width: 174px; height: 39px;" name="to" required="">
             <br><br>
             <label for="dept">Department:</label><br>
             
